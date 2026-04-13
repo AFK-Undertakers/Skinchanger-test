@@ -1,1 +1,2 @@
-.github/
+.github/workflows/build-debug.yml
+.github/workflows/build-release.yml
