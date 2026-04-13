@@ -1,0 +1,56 @@
+#pragma once
+#include "enums.hpp"
+#include "typedefs.hpp"
+
+class entity2_CEntityInstance;
+class server_CGameSceneNode;
+#include "server_CGameSceneNodeHandle.hpp"
+#include "client_CNetworkOriginCellCoordQuantizedVector.hpp"
+#include "server_CModelState.hpp"
+
+class server_CSkeletonInstance {
+    void **__vftable_0;
+    void **__vftable_1;
+    CTransformWS m_nodeToWorld;
+    entity2_CEntityInstance* m_pOwner;
+    server_CGameSceneNode* m_pParent;
+    server_CGameSceneNode* m_pChild;
+    server_CGameSceneNode* m_pNextSibling;
+    char pad_3775[0x28];
+    server_CGameSceneNodeHandle m_hParent;
+    client_CNetworkOriginCellCoordQuantizedVector m_vecOrigin;
+    char pad_3776[0x8];
+    QAngle m_angRotation;
+    float32 m_flScale;
+    VectorWS m_vecAbsOrigin;
+    QAngle m_angAbsRotation;
+    float32 m_flAbsScale;
+    int16_t m_nParentAttachmentOrBone;
+    bool m_bDebugAbsOriginChanges;
+    bool m_bDormant;
+    bool m_bForceParentToBeNetworked;
+    char pad_3777[0x2];
+    uint8_t m_nHierarchicalDepth;
+    uint8_t m_nHierarchyType;
+    uint8_t m_nDoNotSetAnimTimeInInvalidatePhysicsCount;
+    char pad_3778[0x2];
+    CUtlStringToken m_name;
+    char pad_3779[0x10];
+    CUtlStringToken m_hierarchyAttachName;
+    float32 m_flZOffset;
+    float32 m_flClientLocalScale;
+    Vector m_vRenderOrigin;
+    char end_pad_3780[0xc];
+    void **__vftable_2;
+    void **__vftable_3;
+    server_CModelState m_modelState;
+    bool m_bIsAnimationEnabled;
+    bool m_bUseParentRenderBounds;
+    bool m_bDisableSolidCollisionsForHierarchy;
+    char pad_4166[0x1];
+    CUtlStringToken m_materialGroup;
+    uint8_t m_nHitboxSet;
+    char pad_4167[0x5b];
+    bool m_bForceServerConstraintsEnabled;
+    char end_pad_4168[0x3b];
+};

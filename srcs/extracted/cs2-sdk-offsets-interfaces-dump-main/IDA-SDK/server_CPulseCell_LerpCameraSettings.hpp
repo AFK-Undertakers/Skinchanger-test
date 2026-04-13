@@ -1,0 +1,20 @@
+#pragma once
+#include "enums.hpp"
+#include "typedefs.hpp"
+
+class pulse_runtime_lib_CPulse_ResumePoint;
+#include "pulse_runtime_lib_PulseDocNodeID_t.hpp"
+#include "pulse_runtime_lib_CPulse_ResumePoint.hpp"
+#include "client_PointCameraSettings_t.hpp"
+#include "client_PointCameraSettings_t.hpp"
+
+class server_CPulseCell_LerpCameraSettings {
+    void **__vftable_0;
+    pulse_runtime_lib_PulseDocNodeID_t m_nEditorNodeID;
+    char end_pad_512[0x3c];
+    pulse_runtime_lib_CPulse_ResumePoint m_WakeResume;
+    float32 m_flSeconds;
+    client_PointCameraSettings_t m_Start;
+    client_PointCameraSettings_t m_End;
+    char end_pad_4086[0x4];
+};
