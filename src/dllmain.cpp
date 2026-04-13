@@ -71,19 +71,18 @@ static HRESULT __stdcall HookedPresent(IDXGISwapChain* swap_chain, UINT sync_int
             ImGui::CreateContext();
             ImGuiIO& io = ImGui::GetIO();
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
             ImGui::StyleColorsDark();
 
             ImGui_ImplWin32_Init(g_hwnd);
             ImGui_ImplDX11_Init(g_device, g_context);
 
-            // Initialize skinchanger
-            cs2::SkinChanger::Initialize();
-            cs2::SkinPanel::Initialize();
-
             // Subclass window
             g_original_wnd_proc = reinterpret_cast<WNDPROC>(
                 SetWindowLongPtr(g_hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WndProc)));
+
+            // Initialize skinchanger
+            cs2::SkinChanger::Initialize();
+            cs2::SkinPanel::Initialize();
 
             g_initialized = true;
         }
@@ -133,7 +132,7 @@ static HRESULT __stdcall HookedResizeBuffers(IDXGISwapChain* swap_chain, UINT bu
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (g_show_menu) {
+    if (g_initialized && g_show_menu) {
         if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
             return true;
     }

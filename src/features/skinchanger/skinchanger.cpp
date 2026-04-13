@@ -465,7 +465,7 @@ void SkinChanger::OnFrameStageNotify(int stage) {
         if (ItemDatabase::IsKnife(def_index)) {
             if (!s_knife.enabled) continue;
 
-            int target_def = s_knife.defIndex;
+            int target_def = s_knife.def_index;
 
             // Update EconItemView def index
             *reinterpret_cast<uint16_t*>(item_view + offsets::C_EconItemView::m_iItemDefinitionIndex) =
