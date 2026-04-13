@@ -41,7 +41,7 @@ void SkinPanel::Render() {
         return;
     }
 
-    ImGui::BeginChild("SkinChangerMain", ImVec0(0, -ImGui::GetFrameHeightWithSpacing() - 10), true);
+    ImGui::BeginChild("SkinChangerMain", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() - 10), true);
 
     // Search bar
     ImGui::SetNextItemWidth(-1);

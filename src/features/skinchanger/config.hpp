@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 #include <mutex>
-#include "../features/skinchanger/items.hpp"
+#include "items.hpp"
 
 namespace cs2 {
 
