@@ -51,7 +51,7 @@ bool ItemDatabase::DumpFromSchema(uintptr_t econ_item_schema) {
     // --- Dump Item Definitions ---
     int key = -1;
     while ((key = item_map.GetNextKey(key)) != -1) {
-        C_EconItemDefinition_t* def = item_map.FindByKey(key);
+        C_EconItemDefinition_t* def = *item_map.FindByKey(key);
         if (!def) continue;
 
         // Validate pointer
@@ -90,7 +90,7 @@ bool ItemDatabase::DumpFromSchema(uintptr_t econ_item_schema) {
     // --- Dump Paint Kits ---
     key = -1;
     while ((key = paint_map.GetNextKey(key)) != -1) {
-        C_PaintKit_t* kit = paint_map.FindByKey(key);
+        C_PaintKit_t* kit = *paint_map.FindByKey(key);
         if (!kit) continue;
 
         if (reinterpret_cast<uintptr_t>(kit) < 0x10000 || reinterpret_cast<uintptr_t>(kit) > 0x7FFFFFFFFFFFULL)
