@@ -1,4 +1,5 @@
 #include "config.hpp"
+#include "../../core/logger.hpp"
 #include <fstream>
 #include <sstream>
 #include <Windows.h>
@@ -24,8 +25,13 @@ std::string ConfigManager::GetDefaultPath() {
 bool ConfigManager::Load(const std::string& path) {
     std::string config_path = path.empty() ? GetDefaultPath() : path;
 
+    SC_LOG_CFG_LOAD(config_path);
+
     std::ifstream file(config_path);
-    if (!file.is_open()) return false;
+    if (!file.is_open()) {
+        SC_LOG_WARN("Config load failed: file not found — " + config_path);
+        return false;
+    }
 
     std::stringstream buffer;
     buffer << file.rdbuf();
@@ -117,6 +123,8 @@ bool ConfigManager::Load(const std::string& path) {
 
 bool ConfigManager::Save(const std::string& path) {
     std::string config_path = path.empty() ? GetDefaultPath() : path;
+
+    SC_LOG_CFG_SAVE(config_path);
 
     std::lock_guard lock(m_mutex);
 

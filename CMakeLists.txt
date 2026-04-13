@@ -5,6 +5,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# ============================================================================
+# BUILD TYPE CONFIGURATION
+# ============================================================================
+
+# Default to Release if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
 # Output as DLL
 add_library(${PROJECT_NAME} SHARED)
 
@@ -18,6 +27,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 
     # Core utilities
     src/core/memory.cpp
+    src/core/logger.cpp
 
     # SDK
     src/sdk/schema.cpp
@@ -57,7 +67,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 )
 
 # ============================================================================
-# COMPILE OPTIONS
+# COMPILE OPTIONS (Common)
 # ============================================================================
 
 target_compile_options(${PROJECT_NAME} PRIVATE
@@ -66,13 +76,41 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     /permissive-
     /Zc:__cplusplus
     /utf-8
-)
-
-# Disable specific warnings
-target_compile_options(${PROJECT_NAME} PRIVATE
     /wd4100  # unreferenced formal parameter
     /wd4201  # nonstandard extension used: nameless struct/union
     /wd4324  # structure was padded due to alignment specifier
+)
+
+# ============================================================================
+# RELEASE CONFIGURATION
+# ============================================================================
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Release>:/O2>
+    $<$<CONFIG:Release>:/DNDEBUG>
+    $<$<CONFIG:Release>:/GL>           # Whole program optimization
+)
+
+target_link_options(${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Release>:/LTCG>         # Link-time code generation
+    $<$<CONFIG:Release>:/OPT:REF>      # Eliminate unreferenced data
+    $<$<CONFIG:Release>:/OPT:ICF>      # Identical COMDAT folding
+)
+
+# ============================================================================
+# DEBUG CONFIGURATION — Console + Full Logging
+# ============================================================================
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Debug>:/Od>             # No optimization
+    $<$<CONFIG:Debug>:/Zi>             # Full debug info
+    $<$<CONFIG:Debug>:/RTC1>           # Runtime error checks
+    $<$<CONFIG:Debug>:/D "SKINCHANGER_DEBUG">
+)
+
+target_link_options(${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Debug>:/DEBUG>
+    $<$<CONFIG:Debug>:/INCREMENTAL>
 )
 
 # ============================================================================
@@ -91,29 +129,25 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     OUTPUT_NAME "skinchanger"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/build"
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/build"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/Release"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_BINARY_DIR}/Debug"
+    PDB_OUTPUT_DIRECTORY             "${CMAKE_BINARY_DIR}/$<CONFIG>"
 )
 
 # ============================================================================
-# DEPENDENCY SETUP
+# DEPENDENCY CHECK
 # ============================================================================
 
-# Check for ImGui
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/imgui/imgui.cpp")
     message(WARNING "ImGui not found. Clone ImGui into dependencies/imgui/")
     message(WARNING "  git clone https://github.com/ocornut/imgui.git dependencies/imgui")
 endif()
 
 # ============================================================================
-# POST-BUILD
+# POST-BUILD: Rename debug DLL for clarity
 # ============================================================================
 
-# Optional: Copy DLL to CS2 directory after build
-# set(CS2_DIR "C:/Program Files (x86)/Steam/steamapps/common/Counter-Strike Global Offensive/game/bin/win64/")
-# add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#     COMMAND ${CMAKE_COMMAND} -E copy
-#         $<TARGET_FILE:${PROJECT_NAME}>
-#         "${CS2_DIR}/skinchanger.dll"
-# )
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Built ${PROJECT_NAME} ($<CONFIG>) -> $<TARGET_FILE:${PROJECT_NAME}>"
+)

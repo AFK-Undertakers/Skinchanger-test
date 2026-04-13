@@ -13,6 +13,7 @@
 #include "sdk/schema.hpp"
 #include "sdk/inventory.hpp"
 #include "core/memory.hpp"
+#include "core/logger.hpp"
 #include "features/skinchanger/skinchanger.hpp"
 #include "features/skinchanger/items.hpp"
 #include "features/skinchanger/config.hpp"
@@ -211,16 +212,25 @@ static void InitializeHooks() {
 // ============================================================================
 
 static void Cleanup() {
+#ifdef SKINCHANGER_DEBUG
+    SC_LOG_INFO("Cleanup: Shutting down SkinChanger...");
+#endif
     cs2::SkinChanger::Shutdown();
 
     if (g_render_target_view) {
         g_render_target_view->Release();
         g_render_target_view = nullptr;
+#ifdef SKINCHANGER_DEBUG
+        SC_LOG_DEBUG("Cleanup: Render target view released");
+#endif
     }
 
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
+#ifdef SKINCHANGER_DEBUG
+    SC_LOG_DEBUG("Cleanup: ImGui shutdown complete");
+#endif
 
     if (g_context) {
         g_context->Release();
@@ -230,6 +240,9 @@ static void Cleanup() {
         g_device->Release();
         g_device = nullptr;
     }
+#ifdef SKINCHANGER_DEBUG
+    SC_LOG_INFO("Cleanup: All resources released");
+#endif
 }
 
 // ============================================================================
@@ -237,6 +250,18 @@ static void Cleanup() {
 // ============================================================================
 
 DWORD WINAPI MainThread(LPVOID) {
+#ifdef SKINCHANGER_DEBUG
+    // Generate session ID from timestamp
+    auto now = std::chrono::system_clock::now();
+    auto epoch = now.time_since_epoch();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(epoch).count();
+    std::string session_id = "sc-debug-" + std::to_string(ms);
+    cs2::Logger::Initialize(session_id);
+    SC_LOG_INFO("MainThread started");
+    SC_LOG_INFO("Session: " + session_id);
+    SC_LOG_INFO("Build: DEBUG (console + full logging enabled)");
+#endif
+
     // Get D3D11 swap chain by creating a temporary device
     D3D_FEATURE_LEVEL feature_level;
     DXGI_SWAP_CHAIN_DESC swap_chain_desc = {};
@@ -252,31 +277,54 @@ DWORD WINAPI MainThread(LPVOID) {
     ID3D11DeviceContext* temp_context = nullptr;
     IDXGISwapChain* temp_swap_chain = nullptr;
 
+#ifdef SKINCHANGER_DEBUG
+    SC_LOG_INFO("Creating D3D11 device and swap chain...");
+#endif
+
     if (SUCCEEDED(D3D11CreateDeviceAndSwapChain(
             nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0,
             nullptr, 0, D3D11_SDK_VERSION, &swap_chain_desc,
             &temp_swap_chain, &temp_device, &feature_level, &temp_context))) {
 
         g_swap_chain = temp_swap_chain;
+
+#ifdef SKINCHANGER_DEBUG
+        SC_LOG_INFO("D3D11 device created successfully");
+        SC_LOG_INFO("Initializing hooks...");
+#endif
+
         InitializeHooks();
 
         // Clean up temp device (hooks are installed)
         temp_device->Release();
         temp_context->Release();
         // Keep swap chain alive - it will be released in Cleanup()
+    } else {
+#ifdef SKINCHANGER_DEBUG
+        SC_LOG_ERROR("Failed to create D3D11 device and swap chain");
+#endif
     }
 
     // Main loop - wait for uninject
     while (true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-        // Check for unload signal (e.g., file existence)
+        // Check for unload signal (END key)
         if (GetAsyncKeyState(VK_END) & 1) {
+#ifdef SKINCHANGER_DEBUG
+            SC_LOG_INFO("END key pressed — shutting down");
+#endif
             break;
         }
     }
 
+#ifdef SKINCHANGER_DEBUG
+    SC_LOG_INFO("Cleaning up resources...");
+#endif
     Cleanup();
+#ifdef SKINCHANGER_DEBUG
+    cs2::Logger::Shutdown();
+#endif
     FreeLibraryAndExitThread(static_cast<HMODULE>(g_h_module), 0);
     return 0;
 }
@@ -288,11 +336,27 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD reason, LPVOID reserved) {
         g_h_module = h_module;
         DisableThreadLibraryCalls(h_module);
 
+#ifdef SKINCHANGER_DEBUG
+        // Early console for DllMain logging
+        AllocConsole();
+        FILE* fp;
+        freopen_s(&fp, "CONOUT$", "w", stdout);
+        printf("[DLLMAIN] DLL_PROCESS_ATTACH — spawning MainThread\n");
+#endif
+
         // Spawn main thread
         HANDLE h_thread = CreateThread(nullptr, 0, MainThread, nullptr, 0, nullptr);
-        if (h_thread) CloseHandle(h_thread);
+        if (h_thread) {
+#ifdef SKINCHANGER_DEBUG
+            printf("[DLLMAIN] MainThread spawned (handle: %p)\n", h_thread);
+#endif
+            CloseHandle(h_thread);
+        }
     }
     else if (reason == DLL_PROCESS_DETACH) {
+#ifdef SKINCHANGER_DEBUG
+        printf("[DLLMAIN] DLL_PROCESS_DETACH\n");
+#endif
         if (!g_h_module) Cleanup();
     }
 

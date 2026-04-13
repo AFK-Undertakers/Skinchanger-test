@@ -1,0 +1,70 @@
+name: Build Debug DLL
+
+on:
+  push:
+    branches: [ main, session/*, dev ]
+    paths:
+      - 'src/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/build-debug.yml'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-debug:
+    name: Build Debug (x64) — Console + Full Logging
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.28'
+
+      - name: Clone ImGui
+        run: |
+          git clone --depth 1 https://github.com/ocornut/imgui.git dependencies/imgui
+          echo "ImGui cloned successfully"
+
+      - name: Configure CMake (Debug)
+        run: |
+          cmake -B build/debug -DCMAKE_BUILD_TYPE=Debug -A x64
+
+      - name: Build Debug DLL
+        run: |
+          cmake --build build/debug --config Debug --verbose
+
+      - name: Verify output
+        run: |
+          if (Test-Path "build/debug/Debug/skinchanger.dll") {
+            $dll = Get-Item "build/debug/Debug/skinchanger.dll"
+            Write-Output "DLL built successfully: $($dll.Length) bytes"
+          } else {
+            Write-Error "skinchanger.dll not found!"
+            exit 1
+          }
+
+      - name: Upload Debug DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: skinchanger-debug-x64
+          path: |
+            build/debug/Debug/skinchanger.dll
+            build/debug/Debug/skinchanger.pdb
+          retention-days: 14
+
+      - name: Upload Debug Symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: skinchanger-debug-symbols
+          path: build/debug/Debug/*.pdb
+          retention-days: 14

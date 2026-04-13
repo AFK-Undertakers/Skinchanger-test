@@ -1,6 +1,7 @@
 #include "skinchanger.hpp"
 #include "../../sdk/offsets.hpp"
 #include "../../core/memory.hpp"
+#include "../../core/logger.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstring>
@@ -41,59 +42,74 @@ bool SkinChanger::Initialize() {
     if (s_initialized) return true;
 
     s_status_message = "Initializing...";
+    SC_LOG_INFO("SkinChanger: Initializing...");
 
     PatternScanner::GetModuleHandle(L"client.dll");
     s_client_base = PatternScanner::GetModuleBase("client.dll");
     if (!s_client_base) {
         s_status_message = "Failed: client.dll not found";
+        SC_LOG_ERROR("SkinChanger: client.dll not found");
         return false;
     }
+    SC_LOG_INFO("SkinChanger: client.dll base = 0x" + std::to_string(s_client_base));
 
     HMODULE hClient = PatternScanner::GetModuleHandle(L"client.dll");
 
     // Scan all required patterns
-    s_fn_create_econ_item = PatternScanner::FindPattern(hClient,
+    #define SCAN_PATTERN(name, sig) \
+        name = PatternScanner::FindPattern(hClient, sig); \
+        SC_LOG_PATTERN("client.dll", sig, name != 0);
+
+    SCAN_PATTERN(s_fn_create_econ_item,
         "48 83 EC 28 B9 48 00 00 00 E8 ? ? ? ? 48 85");
-
-    s_fn_set_dynamic_attr = PatternScanner::FindPattern(hClient,
+    SCAN_PATTERN(s_fn_set_dynamic_attr,
         "48 89 6C 24 ? 57 41 56 41 57 48 81 EC ? ? ? ? 48 8B FA C7 44 24 ? ? ? ? ? 4D 8B F8");
-
-    s_fn_get_econ_item_system = PatternScanner::FindPattern(hClient,
+    SCAN_PATTERN(s_fn_get_econ_item_system,
         "48 83 EC 28 48 8B 05 ? ? ? ? 48 85 C0 0F 85 81");
-
-    s_fn_inventory_manager = PatternScanner::FindPattern(hClient,
+    SCAN_PATTERN(s_fn_inventory_manager,
         "48 8D 05 ? ? ? ? C3 CC CC CC CC CC CC CC CC 8B 91 ? ? ? ? B8");
-
-    s_fn_update_subclass = PatternScanner::FindPattern(hClient,
+    SCAN_PATTERN(s_fn_update_subclass,
         "40 53 48 83 EC 30 48 8B 41 10 48 8B D9 8B 50 30");
-
-    s_fn_set_mesh_group_mask = PatternScanner::FindPattern(hClient,
+    SCAN_PATTERN(s_fn_set_mesh_group_mask,
         "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8D 99 ? ? ? ? 48 8B 71");
-
-    s_fn_set_model = PatternScanner::FindPattern(hClient,
+    SCAN_PATTERN(s_fn_set_model,
         "40 53 48 83 EC ? 48 8B D9 4C 8B C2 48 8B 0D ? ? ? ? 48 8D 54 24");
+
+    #undef SCAN_PATTERN
 
     // Force viewmodel update pattern
     uintptr_t vm_addr = PatternScanner::FindPattern(hClient,
         "E8 ? ? ? ? 8B 45 ? 85 C0 74 ? 8B 08");
-    if (vm_addr)
+    if (vm_addr) {
         s_force_viewmodel_fn = PatternScanner::ResolveRelativeAddress(vm_addr, 1, 5);
+        SC_LOG_DEBUG("ForceViewModelUpdate resolved: 0x" + std::to_string(s_force_viewmodel_fn));
+    } else {
+        SC_LOG_WARN("ForceViewModelUpdate pattern not found");
+    }
 
     // Dump items from game schema at runtime
     s_status_message = "Dumping item schema from game memory...";
+    SC_LOG_INFO("SkinChanger: Dumping item schema...");
     if (!ItemDatabase::DumpFromSchema()) {
         s_status_message = "Schema dump failed, using fallback data";
+        SC_LOG_WARN("SkinChanger: Schema dump failed");
+    } else {
+        SC_LOG_INFO("SkinChanger: Schema dump complete — " +
+            std::to_string(ItemDatabase::GetItemCount()) + " items, " +
+            std::to_string(ItemDatabase::GetPaintKitCount()) + " paint kits");
     }
 
     s_initialized = true;
     s_status_message = "Ready - " + std::to_string(ItemDatabase::GetItemCount()) +
         " items, " + std::to_string(ItemDatabase::GetPaintKitCount()) + " paint kits";
 
+    SC_LOG_INFO("SkinChanger: Initialization complete");
     ConfigManager::Load();
     return true;
 }
 
 void SkinChanger::Shutdown() {
+    SC_LOG_INFO("SkinChanger: Shutting down...");
     std::unique_lock lock(s_mutex);
     s_weapon_skins.clear();
     s_injected_item_ids.clear();
@@ -111,6 +127,7 @@ void SkinChanger::Shutdown() {
     s_next_fake_item_id = 0xF000000000000001ULL;
     s_glove_frame = 0;
     s_added_gloves = {};
+    SC_LOG_INFO("SkinChanger: Shutdown complete");
 }
 
 // ============================================================================
@@ -212,28 +229,43 @@ uint64_t SkinChanger::GenerateItemID(int def_index) {
 }
 
 bool SkinChanger::ApplySkin(const SkinConfig& config) {
-    if (!s_initialized) return false;
+    if (!s_initialized) {
+        SC_LOG_WARN("ApplySkin: Not initialized");
+        return false;
+    }
 
     std::unique_lock lock(s_mutex);
     s_weapon_skins[config.definition_index] = config;
+
+    SC_LOG_SKIN(config.definition_index, config.paint_kit_id,
+        "def:" + std::to_string(config.definition_index) +
+        " kit:" + std::to_string(config.paint_kit_id));
+    SC_LOG_UI("ApplySkin", "def_index=" + std::to_string(config.definition_index) +
+        " paint_kit=" + std::to_string(config.paint_kit_id));
     return true;
 }
 
 bool SkinChanger::RemoveSkin(uint64_t item_id) {
     std::unique_lock lock(s_mutex);
     auto it = s_weapon_skins.find(static_cast<int>(item_id & 0xFFFF));
-    if (it == s_weapon_skins.end()) return false;
+    if (it == s_weapon_skins.end()) {
+        SC_LOG_WARN("RemoveSkin: Item not found (id=" + std::to_string(item_id) + ")");
+        return false;
+    }
     s_weapon_skins.erase(it);
+    SC_LOG_UI("RemoveSkin", "item_id=" + std::to_string(item_id));
     return true;
 }
 
 void SkinChanger::RemoveAllSkins() {
     std::unique_lock lock(s_mutex);
+    size_t count = s_weapon_skins.size();
     s_weapon_skins.clear();
     s_injected_item_ids.clear();
     s_added_gloves = {};
     s_next_fake_item_id = 0xF000000000000001ULL;
     ForceViewModelUpdate();
+    SC_LOG_UI("RemoveAllSkins", "removed " + std::to_string(count) + " skins");
 }
 
 bool SkinChanger::EquipItem(int loadout_slot, uint64_t item_id) {

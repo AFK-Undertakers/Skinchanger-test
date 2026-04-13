@@ -1,5 +1,6 @@
 #include "skin_panel.hpp"
 #include "../features/skinchanger/skinchanger.hpp"
+#include "../core/logger.hpp"
 #include <imgui.h>
 #include <algorithm>
 #include <cstring>
@@ -296,14 +297,17 @@ void SkinPanel::RenderSkinEditor(const DumpedItemDef& item) {
         if (SkinChanger::ApplySkin(s_current_config)) {
             s_status_log = "Applied: " + item.name;
             SkinChanger::ForceViewModelUpdate();
+            SC_LOG_UI("Apply", item.name + " (kit:" + std::to_string(s_current_config.paint_kit_id) + ")");
         } else {
             s_status_log = "Failed to apply skin";
+            SC_LOG_WARN("UI: Failed to apply skin for " + item.name);
         }
         ImGui::CloseCurrentPopup();
     }
 
     ImGui::SameLine();
     if (ImGui::Button("Cancel", ImVec2(100, 0))) {
+        SC_LOG_UI("Cancel", "Skin editor closed for " + item.name);
         ImGui::CloseCurrentPopup();
     }
 }
@@ -321,8 +325,10 @@ void SkinPanel::RenderStatusPanel() {
     if (ImGui::Button("Save Config", ImVec2(120, 0))) {
         if (SkinChanger::SaveConfig()) {
             s_status_log = "Config saved";
+            SC_LOG_UI("SaveConfig", "Configuration saved successfully");
         } else {
             s_status_log = "Failed to save config";
+            SC_LOG_ERROR("UI: Failed to save config");
         }
     }
 
@@ -330,8 +336,10 @@ void SkinPanel::RenderStatusPanel() {
     if (ImGui::Button("Load Config", ImVec2(120, 0))) {
         if (SkinChanger::LoadConfig()) {
             s_status_log = "Config loaded";
+            SC_LOG_UI("LoadConfig", "Configuration loaded successfully");
         } else {
             s_status_log = "Failed to load config";
+            SC_LOG_ERROR("UI: Failed to load config");
         }
     }
 
@@ -339,12 +347,14 @@ void SkinPanel::RenderStatusPanel() {
     if (ImGui::Button("Force Update VM", ImVec2(140, 0))) {
         SkinChanger::ForceViewModelUpdate();
         s_status_log = "ViewModel update forced";
+        SC_LOG_UI("ForceUpdateVM", "ViewModel update triggered");
     }
 
     ImGui::SameLine();
     if (ImGui::Button("Remove All", ImVec2(120, 0))) {
         SkinChanger::RemoveAllSkins();
         s_status_log = "All skins removed";
+        SC_LOG_UI("RemoveAllSkins", "All skins removed");
     }
 
     ImGui::EndChild();

@@ -1,0 +1,68 @@
+name: Build Release DLL
+
+on:
+  push:
+    branches: [ main, session/* ]
+    paths:
+      - 'src/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/build-release.yml'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    name: Build Release (x64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.28'
+
+      - name: Clone ImGui
+        run: |
+          git clone --depth 1 https://github.com/ocornut/imgui.git dependencies/imgui
+          echo "ImGui cloned successfully"
+
+      - name: Configure CMake (Release)
+        run: |
+          cmake -B build/release -DCMAKE_BUILD_TYPE=Release -A x64
+
+      - name: Build Release DLL
+        run: |
+          cmake --build build/release --config Release --verbose
+
+      - name: Verify output
+        run: |
+          if (Test-Path "build/release/Release/skinchanger.dll") {
+            $dll = Get-Item "build/release/Release/skinchanger.dll"
+            Write-Output "DLL built successfully: $($dll.Length) bytes"
+          } else {
+            Write-Error "skinchanger.dll not found!"
+            exit 1
+          }
+
+      - name: Upload Release DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: skinchanger-release-x64
+          path: build/release/Release/skinchanger.dll
+          retention-days: 30
+
+      - name: Create Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/release/Release/skinchanger.dll
+          generate_release_notes: true
