@@ -1,0 +1,48 @@
+#pragma once
+#include "enums.hpp"
+#include "typedefs.hpp"
+
+class particleslib_CParticleCollectionFloatInput;
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particles_ParticleAttributeIndex_t.hpp"
+
+class particles_C_INIT_RandomColor {
+    void **__vftable_0;
+    particleslib_CParticleCollectionFloatInput m_flOpStrength;
+    particles_ParticleEndcapMode_t m_nOpEndCapState;
+    float32 m_flOpStartFadeInTime;
+    float32 m_flOpEndFadeInTime;
+    float32 m_flOpStartFadeOutTime;
+    float32 m_flOpEndFadeOutTime;
+    float32 m_flOpFadeOscillatePeriod;
+    bool m_bNormalizeToStopTime;
+    char pad_690[0x3];
+    float32 m_flOpTimeOffsetMin;
+    float32 m_flOpTimeOffsetMax;
+    int32_t m_nOpTimeOffsetSeed;
+    int32_t m_nOpTimeScaleSeed;
+    float32 m_flOpTimeScaleMin;
+    float32 m_flOpTimeScaleMax;
+    char pad_691[0x2];
+    bool m_bDisableOperator;
+    char pad_692[0x1];
+    CUtlString m_Notes;
+    char end_pad_693[0x18];
+    int32_t m_nAssociatedEmitterIndex;
+    char end_pad_697[0x4];
+    void **__vftable_1;
+    void **__vftable_2;
+    void **__vftable_3;
+    char __vftable_pad[4];
+    Color m_ColorMin;
+    Color m_ColorMax;
+    Color m_TintMin;
+    Color m_TintMax;
+    float32 m_flTintPerc;
+    float32 m_flUpdateThreshold;
+    int32_t m_nTintCP;
+    particles_ParticleAttributeIndex_t m_nFieldOutput;
+    particles_ParticleColorBlendMode_t m_nTintBlendMode;
+    float32 m_flLightAmplification;
+    char end_pad_833[0x4];
+};

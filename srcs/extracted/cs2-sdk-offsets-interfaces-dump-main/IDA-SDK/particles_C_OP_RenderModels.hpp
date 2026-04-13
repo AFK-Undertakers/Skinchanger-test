@@ -1,0 +1,120 @@
+#pragma once
+#include "enums.hpp"
+#include "typedefs.hpp"
+
+class particleslib_CParticleCollectionFloatInput;
+class particleslib_CParticleCollectionVecInput;
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particles_CParticleVisibilityInputs.hpp"
+#include "particles_ParticleAttributeIndex_t.hpp"
+#include "particles_ParticleAttributeIndex_t.hpp"
+#include "particleslib_CPerParticleVecInput.hpp"
+#include "particleslib_CPerParticleVecInput.hpp"
+#include "particleslib_CPerParticleVecInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particles_ParticleAttributeIndex_t.hpp"
+#include "particles_ParticleAttributeIndex_t.hpp"
+#include "particles_ParticleAttributeIndex_t.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particleslib_CParticleModelInput.hpp"
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particles_ParticleAttributeIndex_t.hpp"
+#include "particleslib_CParticleCollectionVecInput.hpp"
+
+class particles_C_OP_RenderModels {
+    void **__vftable_0;
+    particleslib_CParticleCollectionFloatInput m_flOpStrength;
+    particles_ParticleEndcapMode_t m_nOpEndCapState;
+    float32 m_flOpStartFadeInTime;
+    float32 m_flOpEndFadeInTime;
+    float32 m_flOpStartFadeOutTime;
+    float32 m_flOpEndFadeOutTime;
+    float32 m_flOpFadeOscillatePeriod;
+    bool m_bNormalizeToStopTime;
+    char pad_690[0x3];
+    float32 m_flOpTimeOffsetMin;
+    float32 m_flOpTimeOffsetMax;
+    int32_t m_nOpTimeOffsetSeed;
+    int32_t m_nOpTimeScaleSeed;
+    float32 m_flOpTimeScaleMin;
+    float32 m_flOpTimeScaleMax;
+    char pad_691[0x2];
+    bool m_bDisableOperator;
+    char pad_692[0x1];
+    CUtlString m_Notes;
+    char end_pad_693[0x18];
+    particles_CParticleVisibilityInputs VisibilityInputs;
+    bool m_bCannotBeRefracted;
+    bool m_bSkipRenderingOnMobile;
+    char end_pad_678[0x6];
+    bool m_bOnlyRenderInEffectsBloomPass;
+    bool m_bOnlyRenderInEffectsWaterPass;
+    bool m_bUseMixedResolutionRendering;
+    bool m_bOnlyRenderInEffecsGameOverlay;
+    char pad_1112[0x4];
+    char m_ModelList[0x18];
+    particles_ParticleAttributeIndex_t m_nBodyGroupField;
+    particles_ParticleAttributeIndex_t m_nSubModelField;
+    bool m_bIgnoreNormal;
+    bool m_bOrientZ;
+    bool m_bCenterOffset;
+    char pad_1113[0x5];
+    particleslib_CPerParticleVecInput m_vecLocalOffset;
+    particleslib_CPerParticleVecInput m_vecLocalRotation;
+    bool m_bIgnoreRadius;
+    char pad_1114[0x3];
+    int32_t m_nModelScaleCP;
+    particleslib_CPerParticleVecInput m_vecComponentScale;
+    bool m_bLocalScale;
+    char pad_1115[0x3];
+    int32_t m_nSizeCullBloat;
+    bool m_bAnimated;
+    char pad_1116[0x7];
+    particleslib_CPerParticleFloatInput m_flAnimationRate;
+    bool m_bScaleAnimationRate;
+    bool m_bForceLoopingAnimation;
+    bool m_bResetAnimOnStop;
+    bool m_bManualAnimFrame;
+    particles_ParticleAttributeIndex_t m_nAnimationScaleField;
+    particles_ParticleAttributeIndex_t m_nAnimationField;
+    particles_ParticleAttributeIndex_t m_nManualFrameField;
+    char m_ActivityName[256];
+    char m_SequenceName[256];
+    bool m_bEnableClothSimulation;
+    char m_ClothEffectName[64];
+    char pad_1117[0x7];
+    char m_hOverrideMaterial[0x8];
+    bool m_bOverrideTranslucentMaterials;
+    char pad_1118[0x7];
+    particleslib_CPerParticleFloatInput m_nSkin;
+    char m_MaterialVars[0x18];
+    particleslib_CPerParticleFloatInput m_flRenderFilter;
+    particleslib_CPerParticleFloatInput m_flManualModelSelection;
+    particleslib_CParticleModelInput m_modelInput;
+    int32_t m_nLOD;
+    char m_EconSlotName[256];
+    bool m_bOriginalModel;
+    bool m_bSuppressTint;
+    char pad_1119[0x2];
+    particles_RenderModelSubModelFieldType_t m_nSubModelFieldType;
+    bool m_bDisableShadows;
+    bool m_bDisableDepthPrepass;
+    bool m_bAcceptsDecals;
+    bool m_bForceDrawInterlevedWithSiblings;
+    bool m_bDoNotDrawInParticlePass;
+    bool m_bAllowApproximateTransforms;
+    char m_szRenderAttribute[260];
+    char pad_1120[0x2];
+    particleslib_CParticleCollectionFloatInput m_flRadiusScale;
+    particleslib_CParticleCollectionFloatInput m_flAlphaScale;
+    particleslib_CParticleCollectionFloatInput m_flRollScale;
+    particles_ParticleAttributeIndex_t m_nAlpha2Field;
+    char pad_1121[0x4];
+    particleslib_CParticleCollectionVecInput m_vecColorScale;
+    particles_ParticleColorBlendType_t m_nColorBlendType;
+    char end_pad_1122[0x44];
+};

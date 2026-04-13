@@ -1,0 +1,64 @@
+#pragma once
+#include "enums.hpp"
+#include "typedefs.hpp"
+
+class particleslib_CParticleCollectionFloatInput;
+class particleslib_CParticleCollectionVecInput;
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particles_CParticleVisibilityInputs.hpp"
+#include "particleslib_CParticleCollectionVecInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+
+class particles_C_OP_RenderOmni2Light {
+    void **__vftable_0;
+    particleslib_CParticleCollectionFloatInput m_flOpStrength;
+    particles_ParticleEndcapMode_t m_nOpEndCapState;
+    float32 m_flOpStartFadeInTime;
+    float32 m_flOpEndFadeInTime;
+    float32 m_flOpStartFadeOutTime;
+    float32 m_flOpEndFadeOutTime;
+    float32 m_flOpFadeOscillatePeriod;
+    bool m_bNormalizeToStopTime;
+    char pad_690[0x3];
+    float32 m_flOpTimeOffsetMin;
+    float32 m_flOpTimeOffsetMax;
+    int32_t m_nOpTimeOffsetSeed;
+    int32_t m_nOpTimeScaleSeed;
+    float32 m_flOpTimeScaleMin;
+    float32 m_flOpTimeScaleMax;
+    char pad_691[0x2];
+    bool m_bDisableOperator;
+    char pad_692[0x1];
+    CUtlString m_Notes;
+    char end_pad_693[0x18];
+    particles_CParticleVisibilityInputs VisibilityInputs;
+    bool m_bCannotBeRefracted;
+    bool m_bSkipRenderingOnMobile;
+    char end_pad_678[0x6];
+    particles_ParticleOmni2LightTypeChoiceList_t m_nLightType;
+    char pad_1123[0x4];
+    particleslib_CParticleCollectionVecInput m_vColorBlend;
+    particles_ParticleColorBlendType_t m_nColorBlendType;
+    particles_ParticleLightUnitChoiceList_t m_nBrightnessUnit;
+    particleslib_CPerParticleFloatInput m_flBrightnessLumens;
+    particleslib_CPerParticleFloatInput m_flBrightnessCandelas;
+    bool m_bCastShadows;
+    bool m_bFog;
+    char pad_1124[0x6];
+    particleslib_CPerParticleFloatInput m_flFogScale;
+    particleslib_CPerParticleFloatInput m_flLuminaireRadius;
+    particleslib_CPerParticleFloatInput m_flSkirt;
+    particleslib_CPerParticleFloatInput m_flRange;
+    particleslib_CPerParticleFloatInput m_flInnerConeAngle;
+    particleslib_CPerParticleFloatInput m_flOuterConeAngle;
+    char m_hLightCookie[0x8];
+    bool m_bSphericalCookie;
+    char end_pad_1125[0xf];
+};

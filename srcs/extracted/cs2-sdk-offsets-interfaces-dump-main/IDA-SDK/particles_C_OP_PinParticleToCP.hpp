@@ -1,0 +1,56 @@
+#pragma once
+#include "enums.hpp"
+#include "typedefs.hpp"
+
+class particleslib_CParticleCollectionFloatInput;
+class particleslib_CParticleCollectionVecInput;
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particleslib_CParticleCollectionVecInput.hpp"
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particleslib_CParticleCollectionFloatInput.hpp"
+#include "particleslib_CPerParticleFloatInput.hpp"
+
+class particles_C_OP_PinParticleToCP {
+    void **__vftable_0;
+    particleslib_CParticleCollectionFloatInput m_flOpStrength;
+    particles_ParticleEndcapMode_t m_nOpEndCapState;
+    float32 m_flOpStartFadeInTime;
+    float32 m_flOpEndFadeInTime;
+    float32 m_flOpStartFadeOutTime;
+    float32 m_flOpEndFadeOutTime;
+    float32 m_flOpFadeOscillatePeriod;
+    bool m_bNormalizeToStopTime;
+    char pad_690[0x3];
+    float32 m_flOpTimeOffsetMin;
+    float32 m_flOpTimeOffsetMax;
+    int32_t m_nOpTimeOffsetSeed;
+    int32_t m_nOpTimeScaleSeed;
+    float32 m_flOpTimeScaleMin;
+    float32 m_flOpTimeScaleMax;
+    char pad_691[0x2];
+    bool m_bDisableOperator;
+    char pad_692[0x1];
+    CUtlString m_Notes;
+    char end_pad_693[0x18];
+    int32_t m_nControlPointNumber;
+    char pad_1023[0x4];
+    particleslib_CParticleCollectionVecInput m_vecOffset;
+    bool m_bOffsetLocal;
+    char pad_1024[0x3];
+    particles_ParticleSelection_t m_nParticleSelection;
+    particleslib_CParticleCollectionFloatInput m_nParticleNumber;
+    particles_ParticlePinDistance_t m_nPinBreakType;
+    char pad_1025[0x4];
+    particleslib_CParticleCollectionFloatInput m_flBreakDistance;
+    particleslib_CParticleCollectionFloatInput m_flBreakSpeed;
+    particleslib_CParticleCollectionFloatInput m_flAge;
+    int32_t m_nBreakControlPointNumber;
+    int32_t m_nBreakControlPointNumber2;
+    particleslib_CParticleCollectionFloatInput m_flBreakValue;
+    particleslib_CPerParticleFloatInput m_flInterpolation;
+    bool m_bRetainInitialVelocity;
+    char end_pad_1026[0x7];
+};
