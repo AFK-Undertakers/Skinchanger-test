@@ -47,10 +47,18 @@ public:
     C_EconItemView& m_Item() { return *reinterpret_cast<C_EconItemView*>(reinterpret_cast<uintptr_t>(this) + 0x50); }
 };
 
-class CEconItem {
-public:
+struct CEconItem_t {
+    void*    vtable[2];
     uint64_t m_ulID;
-    uint8_t pad[0x200];
+    uint64_t m_ulOriginalID;
+    void*    m_pCustomDataOptimized;
+    uint32_t m_unAccountID;
+    uint32_t m_unInventory;
+    uint16_t m_unDefIndex;
+    uint16_t m_unFlags;
+    int16_t  m_iItemSet;
+    int32_t  m_bSOUpdateFrame;
+    uint8_t  m_unExtraFlags;
 };
 
 class CCSPlayerInventory {

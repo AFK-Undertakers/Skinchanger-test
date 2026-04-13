@@ -18,11 +18,11 @@ private:
     static void RenderAgentsTab();
     static void RenderMusicKitsTab();
     static void RenderStatusPanel();
-    static void RenderSkinEditor(const DumpedItem& item);
+    static void RenderSkinEditor(const DumpedItemDef& item);
 
     static char s_search_buffer[256];
     static SkinConfig s_current_config;
-    static const DumpedItem* s_selected_item;
+    static const DumpedItemDef* s_selected_item;
     static bool s_show_editor;
     static std::string s_status_log;
     static int s_selected_paint_kit;

@@ -1,215 +1,147 @@
 #include "items.hpp"
+#include "../../core/memory.hpp"
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 
 namespace cs2 {
 
-std::vector<DumpedItem> ItemDatabase::m_items;
-std::vector<PaintKitInfo> ItemDatabase::m_paint_kits;
-std::unordered_map<int, const char*> ItemDatabase::m_knife_models;
-std::vector<int> ItemDatabase::m_glove_def_indices;
+std::vector<DumpedItemDef> ItemDatabase::s_items;
+std::vector<DumpedPaintKit> ItemDatabase::s_paint_kits;
+bool ItemDatabase::s_dump_ready = false;
+std::shared_mutex ItemDatabase::s_mutex;
 
-void ItemDatabase::Initialize() {
-    m_knife_models = {
-        {500, "models/weapons/v_knife_bayonet.mdl"},
-        {503, "models/weapons/v_knife_flip.mdl"},
-        {505, "models/weapons/v_knife_gut.mdl"},
-        {506, "models/weapons/v_knife_karam.mdl"},
-        {507, "models/weapons/v_knife_m9_bay.mdl"},
-        {508, "models/weapons/v_knife_tactical.mdl"},
-        {509, "models/weapons/v_knife_falchion_advanced.mdl"},
-        {512, "models/weapons/v_knife_survival_bowie.mdl"},
-        {514, "models/weapons/v_knife_butterfly.mdl"},
-        {515, "models/weapons/v_knife_push.mdl"},
-        {516, "models/weapons/v_knife_cord.mdl"},
-        {517, "models/weapons/v_knife_canis.mdl"},
-        {518, "models/weapons/v_knife_ursus.mdl"},
-        {519, "models/weapons/v_knife_gypsy_jackknife.mdl"},
-        {520, "models/weapons/v_knife_outdoor.mdl"},
-        {521, "models/weapons/v_knife_stiletto.mdl"},
-        {522, "models/weapons/v_knife_widowmaker.mdl"},
-        {523, "models/weapons/v_knife_skeleton.mdl"},
-        {525, "models/weapons/v_knife_kukri.mdl"},
-        {526, "models/weapons/v_knife_css.mdl"},
-        {527, "models/weapons/v_knife_ks.mdl"}
-    };
+static uintptr_t g_econ_item_schema = 0;
 
-    m_glove_def_indices = {
-        4725, 4726, 4727, 4728, 4729, 4722, 4723, 4724,
-        5027, 5028, 5029, 5030, 5031, 5032, 5033, 5034, 5035
-    };
+static bool ResolveEconItemSchema() {
+    if (g_econ_item_schema) return true;
 
-    m_paint_kits = {
-        {0, "Stock", ""},
-        {2, "Candy Apple", ""},
-        {3, "Blue Steel", ""},
-        {5, "Well-Worn", ""},
-        {8, "Anodized Navy", ""},
-        {28, "Night", ""},
-        {30, "Ultraviolet", ""},
-        {32, "Fade", ""},
-        {37, "Safari Mesh", ""},
-        {38, "Boreal Forest", ""},
-        {39, "Forest DDPAT", ""},
-        {40, "Urban Masked", ""},
-        {42, "Sand Dune", ""},
-        {43, "Tiger Tooth", ""},
-        {44, "Damascus Steel", ""},
-        {46, "Rust Coat", ""},
-        {47, "Doppler", ""},
-        {48, "Marble Fade", ""},
-        {59, "Crimson Web", ""},
-        {60, "Slaughter", ""},
-        {61, "Case Hardened", ""},
-        {67, "Stained", ""},
-        {70, "Scorched", ""},
-        {143, "Hypnotic", ""},
-        {180, "Water Elemental", ""},
-        {222, "Serum", ""},
-        {223, "Bloodsport", ""},
-        {226, "Asiimov", ""},
-        {235, "Hyper Beast", ""},
-        {246, "Neon Rider", ""},
-        {300, "Printstream", ""},
-        {340, "Neo-Noir", ""},
-        {380, "The Prince", ""},
-        {416, "Phantom Disruptor", ""},
-        {456, "Welcome to the Jungle", ""},
-        {515, "Kill Confirmed", ""},
-        {600, "In Living Color", ""},
-        {694, "Wasteland Princess", ""},
-        {707, "Gold Arabesque", ""},
-        {800, "X-Ray", ""},
-        {900, "Cyrex", ""},
-        {1000, "Vulcan", ""}
-    };
+    HMODULE hClient = PatternScanner::GetModuleHandle(L"client.dll");
+    if (!hClient) return false;
 
-    struct WeaponDef { int def; const char* name; const char* model; };
-    static const WeaponDef weapons[] = {
-        {1, "Desert Eagle", "models/weapons/w_pist_deagle.mdl"},
-        {2, "Dual Berettas", "models/weapons/w_pist_elite.mdl"},
-        {3, "Five-SeveN", "models/weapons/w_pist_fiveseven.mdl"},
-        {4, "Glock-18", "models/weapons/w_pist_glock18.mdl"},
-        {7, "AK-47", "models/weapons/w_rif_ak47.mdl"},
-        {8, "AUG", "models/weapons/w_rif_aug.mdl"},
-        {9, "AWP", "models/weapons/w_snip_awp.mdl"},
-        {10, "FAMAS", "models/weapons/w_rif_famas.mdl"},
-        {11, "G3SG1", "models/weapons/w_snip_g3sg1.mdl"},
-        {13, "Galil AR", "models/weapons/w_rif_galilar.mdl"},
-        {14, "M249", "models/weapons/w_mach_m249para.mdl"},
-        {16, "M4A4", "models/weapons/w_rif_m4a1.mdl"},
-        {17, "MAC-10", "models/weapons/w_smg_mac10.mdl"},
-        {19, "P90", "models/weapons/w_smg_p90.mdl"},
-        {23, "MP5-SD", "models/weapons/w_smg_mp5sd.mdl"},
-        {24, "UMP-45", "models/weapons/w_smg_ump45.mdl"},
-        {25, "XM1014", "models/weapons/w_shot_xm1014.mdl"},
-        {26, "PP-Bizon", "models/weapons/w_smg_bizon.mdl"},
-        {27, "MAG-7", "models/weapons/w_shot_mag7.mdl"},
-        {28, "Negev", "models/weapons/w_mach_negev.mdl"},
-        {29, "Sawed-Off", "models/weapons/w_shot_sawedoff.mdl"},
-        {30, "Tec-9", "models/weapons/w_pist_tec9.mdl"},
-        {31, "Zeus x27", "models/weapons/w_eq_taser.mdl"},
-        {32, "P2000", "models/weapons/w_pist_hkp2000.mdl"},
-        {33, "MP7", "models/weapons/w_smg_mp7.mdl"},
-        {34, "MP9", "models/weapons/w_smg_mp9.mdl"},
-        {35, "Nova", "models/weapons/w_shot_nova.mdl"},
-        {36, "P250", "models/weapons/w_pist_p250.mdl"},
-        {38, "Scar-20", "models/weapons/w_snip_scar20.mdl"},
-        {39, "SG 553", "models/weapons/w_rif_sg556.mdl"},
-        {40, "SSG 08", "models/weapons/w_snip_ssg08.mdl"},
-        {60, "M4A1-S", "models/weapons/w_rif_m4a1_s.mdl"},
-        {61, "USP-S", "models/weapons/w_pist_usp_silencer.mdl"},
-        {63, "CZ75-Auto", "models/weapons/w_pist_cz_75.mdl"},
-        {64, "R8 Revolver", "models/weapons/w_pist_revolver.mdl"}
-    };
+    // Pattern: 48 83 EC 28 48 8B 05 ? ? ? ? 48 85 C0 0F 85 81
+    // This is the C_EconItemSystem getter function
+    uintptr_t fn = PatternScanner::FindPattern(hClient,
+        "48 83 EC 28 48 8B 05 ? ? ? ? 48 85 C0 0F 85 81");
+    if (!fn) return false;
 
-    m_items.clear();
+    // The function reads a global pointer at RIP+3
+    uintptr_t schema_ptr = PatternScanner::ResolveRelativeAddress(fn, 3, 7);
+    if (!schema_ptr) return false;
 
-    for (const auto& w : weapons) {
-        DumpedItem item;
-        item.definition_index = w.def;
-        item.name = w.name;
-        item.model_path = w.model;
-        item.category = ItemCategory::Weapon;
-        item.paint_kits = m_paint_kits;
-        m_items.push_back(std::move(item));
-    }
-
-    for (const auto& [def, model] : m_knife_models) {
-        DumpedItem item;
-        item.definition_index = def;
-        item.model_path = model;
-        item.category = ItemCategory::Knife;
-
-        std::string name = model;
-        size_t start = name.find_last_of('/');
-        if (start != std::string::npos) {
-            name = name.substr(start + 1);
-            size_t dot = name.find(".mdl");
-            if (dot != std::string::npos) name = name.substr(0, dot);
-            if (name.find("v_knife_") == 0) {
-                name = name.substr(8);
-                for (auto& c : name) if (c == '_') c = ' ';
-                if (!name.empty()) name[0] = std::toupper(name[0]);
-            }
-        }
-        item.name = name;
-        item.paint_kits = m_paint_kits;
-        m_items.push_back(std::move(item));
-    }
-
-    const char* glove_names[] = {
-        "Sport Gloves | Pandora's Box",
-        "Sport Gloves | Hedge Maze",
-        "Sport Gloves | Arbitration",
-        "Sport Gloves | Slingshot",
-        "Sport Gloves | Big Game",
-        "Sport Gloves | Scarlet Shamagh",
-        "Sport Gloves | Vice",
-        "Sport Gloves | Wasteland Rebel",
-        "Moto Gloves | Spearmint",
-        "Moto Gloves | Boom!",
-        "Moto Gloves | 3rd Commando Company",
-        "Moto Gloves | Turtleneck",
-        "Moto Gloves | Transport",
-        "Moto Gloves | Polygon",
-        "Specialist Gloves | Crimson Kimono",
-        "Specialist Gloves | Emerald Web",
-        "Specialist Gloves | Foundation"
-    };
-
-    for (size_t i = 0; i < m_glove_def_indices.size() && i < 17; ++i) {
-        DumpedItem item;
-        item.definition_index = m_glove_def_indices[i];
-        item.name = glove_names[i];
-        item.category = ItemCategory::Gloves;
-        item.paint_kits = m_paint_kits;
-        m_items.push_back(std::move(item));
-    }
+    // C_EconItemSystem + 0x8 = C_EconItemSchema*
+    g_econ_item_schema = *reinterpret_cast<uintptr_t*>(schema_ptr + 0x8);
+    return g_econ_item_schema != 0;
 }
 
-const std::vector<DumpedItem>& ItemDatabase::GetItems() {
-    return m_items;
+bool ItemDatabase::DumpFromSchema(uintptr_t econ_item_schema) {
+    if (!econ_item_schema) return false;
+
+    std::unique_lock lock(s_mutex);
+    s_items.clear();
+    s_paint_kits.clear();
+
+    // C_EconItemSchema layout (from wh-esports):
+    //   +0x128: CUtlMap<int, C_EconItemDefinition*>  m_ItemDefinitions
+    //   +0x2F0: CUtlMap<int, C_PaintKit*>            m_PaintKits
+
+    auto& item_map = *reinterpret_cast<CUtlMap<C_EconItemDefinition_t*>*>(econ_item_schema + 0x128);
+    auto& paint_map = *reinterpret_cast<CUtlMap<C_PaintKit_t*>*>(econ_item_schema + 0x2F0);
+
+    // --- Dump Item Definitions ---
+    int key = -1;
+    while ((key = item_map.GetNextKey(key)) != -1) {
+        C_EconItemDefinition_t* def = item_map.FindByKey(key);
+        if (!def) continue;
+
+        // Validate pointer
+        if (reinterpret_cast<uintptr_t>(def) < 0x10000 || reinterpret_cast<uintptr_t>(def) > 0x7FFFFFFFFFFFULL)
+            continue;
+
+        if (!def->m_bEnabled) continue;
+
+        DumpedItemDef entry{};
+        entry.def_index = def->m_nDefIndex;
+
+        // Get name via vtable
+        if (def->m_pszItemBaseName && def->m_pszItemBaseName[0])
+            entry.name = def->m_pszItemBaseName;
+        else if (def->GetName() && def->GetName()[0])
+            entry.name = def->GetName();
+        else
+            entry.name = "Unknown_" + std::to_string(entry.def_index);
+
+        entry.base_name = def->m_pszItemBaseName ? def->m_pszItemBaseName : "";
+        entry.type_name = def->m_pszItemTypeName ? def->m_pszItemTypeName : "";
+        entry.model_path = def->GetModelName() ? def->GetModelName() : "";
+        entry.loadout_slot = def->GetLoadoutSlot();
+        entry.rarity = def->GetRarity();
+
+        if (def->IsKnife())       entry.type = ItemType::Knife;
+        else if (def->IsGlove())  entry.type = ItemType::Glove;
+        else if (def->IsAgent())  entry.type = ItemType::Agent;
+        else if (def->IsWeapon()) entry.type = ItemType::Weapon;
+        else                      entry.type = ItemType::Unknown;
+
+        if (entry.type != ItemType::Unknown)
+            s_items.push_back(std::move(entry));
+    }
+
+    // --- Dump Paint Kits ---
+    key = -1;
+    while ((key = paint_map.GetNextKey(key)) != -1) {
+        C_PaintKit_t* kit = paint_map.FindByKey(key);
+        if (!kit) continue;
+
+        if (reinterpret_cast<uintptr_t>(kit) < 0x10000 || reinterpret_cast<uintptr_t>(kit) > 0x7FFFFFFFFFFFULL)
+            continue;
+
+        if (kit->m_id == 0 || kit->m_id == 9001) continue;
+        if (!kit->m_name || kit->m_name[0] == '\0') continue;
+
+        DumpedPaintKit entry{};
+        entry.id = kit->m_id;
+        entry.name = kit->m_name;
+        entry.description = kit->m_description_tag ? kit->m_description_tag : "";
+        entry.rarity = kit->m_rarity;
+        entry.is_legacy = kit->IsLegacy();
+
+        s_paint_kits.push_back(std::move(entry));
+    }
+
+    s_dump_ready = true;
+    return true;
 }
 
-const std::vector<DumpedItem>& ItemDatabase::GetItems(ItemCategory category) {
-    static std::vector<DumpedItem> filtered;
+bool ItemDatabase::DumpFromSchema() {
+    if (!ResolveEconItemSchema()) return false;
+    return DumpFromSchema(g_econ_item_schema);
+}
+
+const std::vector<DumpedItemDef>& ItemDatabase::GetItems() {
+    return s_items;
+}
+
+const std::vector<DumpedItemDef>& ItemDatabase::GetItems(ItemType type) {
+    static std::vector<DumpedItemDef> filtered;
     filtered.clear();
-    for (const auto& item : m_items) {
-        if (item.category == category) filtered.push_back(item);
+    std::shared_lock lock(s_mutex);
+    for (const auto& item : s_items) {
+        if (item.type == type) filtered.push_back(item);
     }
     return filtered;
 }
 
-std::vector<DumpedItem> ItemDatabase::Search(std::string_view query) {
-    std::vector<DumpedItem> results;
-    if (query.empty()) return m_items;
+std::vector<DumpedItemDef> ItemDatabase::Search(std::string_view query) {
+    std::shared_lock lock(s_mutex);
+    std::vector<DumpedItemDef> results;
+    if (query.empty()) return s_items;
 
     std::string lower_query;
     lower_query.reserve(query.size());
     for (char c : query) lower_query += std::tolower(static_cast<unsigned char>(c));
 
-    for (const auto& item : m_items) {
+    for (const auto& item : s_items) {
         std::string lower_name = item.name;
         std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
             [](unsigned char c) { return std::tolower(c); });
@@ -219,16 +151,21 @@ std::vector<DumpedItem> ItemDatabase::Search(std::string_view query) {
     return results;
 }
 
-std::vector<DumpedItem> ItemDatabase::Search(std::string_view query, ItemCategory category) {
-    std::vector<DumpedItem> results;
-    if (query.empty()) return GetItems(category);
+std::vector<DumpedItemDef> ItemDatabase::Search(std::string_view query, ItemType type) {
+    std::shared_lock lock(s_mutex);
+    std::vector<DumpedItemDef> results;
+    if (query.empty()) {
+        for (const auto& item : s_items)
+            if (item.type == type) results.push_back(item);
+        return results;
+    }
 
     std::string lower_query;
     lower_query.reserve(query.size());
     for (char c : query) lower_query += std::tolower(static_cast<unsigned char>(c));
 
-    for (const auto& item : m_items) {
-        if (item.category != category) continue;
+    for (const auto& item : s_items) {
+        if (item.type != type) continue;
         std::string lower_name = item.name;
         std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
             [](unsigned char c) { return std::tolower(c); });
@@ -238,55 +175,60 @@ std::vector<DumpedItem> ItemDatabase::Search(std::string_view query, ItemCategor
     return results;
 }
 
-const DumpedItem* ItemDatabase::FindByDefIndex(int def_index) {
-    for (const auto& item : m_items) {
-        if (item.definition_index == def_index) return &item;
-    }
+const DumpedItemDef* ItemDatabase::FindByDefIndex(int def_index) {
+    std::shared_lock lock(s_mutex);
+    for (const auto& item : s_items)
+        if (item.def_index == def_index) return &item;
     return nullptr;
 }
 
-const char* ItemDatabase::GetKnifeModel(int def_index) {
-    auto it = m_knife_models.find(def_index);
-    return (it != m_knife_models.end()) ? it->second : nullptr;
+const DumpedPaintKit* ItemDatabase::FindPaintKit(int id) {
+    std::shared_lock lock(s_mutex);
+    for (const auto& kit : s_paint_kits)
+        if (kit.id == id) return &kit;
+    return nullptr;
+}
+
+const std::vector<DumpedPaintKit>& ItemDatabase::GetPaintKits() {
+    return s_paint_kits;
 }
 
 bool ItemDatabase::IsKnife(int def_index) {
-    return m_knife_models.count(def_index) > 0;
+    return def_index >= 500 && def_index <= 527;
 }
 
 bool ItemDatabase::IsGlove(int def_index) {
-    for (int g : m_glove_def_indices)
-        if (g == def_index) return true;
-    return false;
+    // Sport gloves: 4722-4729, Moto: 5027-5034, Specialist: 5035
+    // Also: 4725-4729, 5027-5035
+    return (def_index >= 4722 && def_index <= 4729) ||
+           (def_index >= 5027 && def_index <= 5035);
 }
 
 bool ItemDatabase::IsWeapon(int def_index) {
     return !IsKnife(def_index) && !IsGlove(def_index) && def_index > 0 && def_index < 500;
 }
 
-ItemCategory ItemDatabase::CategorizeDefIndex(int def_index) {
-    if (IsKnife(def_index)) return ItemCategory::Knife;
-    if (IsGlove(def_index)) return ItemCategory::Gloves;
-    if (def_index >= 5000) return ItemCategory::Agent;
-    if (def_index > 0 && def_index < 500) return ItemCategory::Weapon;
-    return ItemCategory::Unknown;
+ItemType ItemDatabase::CategorizeDefIndex(int def_index) {
+    if (IsKnife(def_index)) return ItemType::Knife;
+    if (IsGlove(def_index)) return ItemType::Glove;
+    if (def_index >= 5000) return ItemType::Agent;
+    if (def_index > 0 && def_index < 500) return ItemType::Weapon;
+    return ItemType::Unknown;
 }
 
 int ItemDatabase::GetLoadoutSlotForDefIndex(int def_index) {
-    if (IsKnife(def_index)) return static_cast<int>(LoadoutSlot::Knife);
+    if (IsKnife(def_index)) return static_cast<int>(LoadoutSlot::Melee);
 
+    // Primary weapons: rifles, SMGs, shotguns, machine guns, snipers
     static const int primary[] = {7,8,9,10,11,13,14,16,17,19,23,24,25,26,27,28,29,33,34,35,38,39,40,60};
-    for (int p : primary) if (def_index == p) return static_cast<int>(LoadoutSlot::Primary);
+    for (int p : primary) if (def_index == p) return static_cast<int>(LoadoutSlot::Rifle0);
 
+    // Secondary weapons: pistols
     static const int secondary[] = {1,2,3,4,30,32,36,61,63,64};
-    for (int s : secondary) if (def_index == s) return static_cast<int>(LoadoutSlot::Secondary);
+    for (int s : secondary) if (def_index == s) return static_cast<int>(LoadoutSlot::Secondary0);
 
-    if (IsGlove(def_index)) return static_cast<int>(LoadoutSlot::Hands);
+    if (IsGlove(def_index)) return static_cast<int>(LoadoutSlot::Gloves);
     return -1;
-}
-
-const std::vector<PaintKitInfo>& ItemDatabase::GetPaintKits() {
-    return m_paint_kits;
 }
 
 }

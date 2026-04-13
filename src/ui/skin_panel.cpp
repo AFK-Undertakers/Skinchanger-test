@@ -8,7 +8,7 @@ namespace cs2 {
 
 char SkinPanel::s_search_buffer[256] = {0};
 SkinConfig SkinPanel::s_current_config;
-const DumpedItem* SkinPanel::s_selected_item = nullptr;
+const DumpedItemDef* SkinPanel::s_selected_item = nullptr;
 bool SkinPanel::s_show_editor = false;
 std::string SkinPanel::s_status_log = "Ready";
 int SkinPanel::s_selected_paint_kit = 0;
@@ -91,7 +91,7 @@ void SkinPanel::Render() {
 }
 
 void SkinPanel::RenderWeaponsTab() {
-    auto items = ItemDatabase::Search(s_search_buffer, ItemCategory::Weapon);
+    auto items = ItemDatabase::Search(s_search_buffer, ItemType::Weapon);
 
     if (ImGui::BeginTable("WeaponsTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, 300))) {
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
@@ -105,20 +105,20 @@ void SkinPanel::RenderWeaponsTab() {
             ImGui::Text("%s", item.name.c_str());
 
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%d", item.definition_index);
+            ImGui::Text("%d", item.def_index);
 
             ImGui::TableSetColumnIndex(2);
-            if (ImGui::SmallButton(("Edit##" + std::to_string(item.definition_index)).c_str())) {
+            if (ImGui::SmallButton(("Edit##" + std::to_string(item.def_index)).c_str())) {
                 s_selected_item = &item;
-                s_current_config.definition_index = item.definition_index;
+                s_current_config.definition_index = item.def_index;
                 s_current_config.paint_kit_id = 0;
                 s_current_config.seed = 0;
-                s_current_config.wear = 0.0f;
+                s_current_config.wear = 0.0001f;
                 s_current_config.stattrak = -1;
                 s_current_config.custom_name.clear();
                 s_current_config.enabled = true;
                 s_selected_paint_kit = 0;
-                s_selected_wear = 0.0f;
+                s_selected_wear = 0.0001f;
                 s_selected_seed = 0;
                 s_selected_stattrak = 0;
                 s_stattrak_enabled = false;
@@ -131,7 +131,7 @@ void SkinPanel::RenderWeaponsTab() {
 }
 
 void SkinPanel::RenderKnivesTab() {
-    auto items = ItemDatabase::Search(s_search_buffer, ItemCategory::Knife);
+    auto items = ItemDatabase::Search(s_search_buffer, ItemType::Knife);
 
     if (ImGui::BeginTable("KnivesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, 300))) {
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
@@ -145,20 +145,20 @@ void SkinPanel::RenderKnivesTab() {
             ImGui::Text("%s", item.name.c_str());
 
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%d", item.definition_index);
+            ImGui::Text("%d", item.def_index);
 
             ImGui::TableSetColumnIndex(2);
-            if (ImGui::SmallButton(("Edit##" + std::to_string(item.definition_index)).c_str())) {
+            if (ImGui::SmallButton(("Edit##" + std::to_string(item.def_index)).c_str())) {
                 s_selected_item = &item;
-                s_current_config.definition_index = item.definition_index;
+                s_current_config.definition_index = item.def_index;
                 s_current_config.paint_kit_id = 0;
                 s_current_config.seed = 0;
-                s_current_config.wear = 0.0f;
+                s_current_config.wear = 0.0001f;
                 s_current_config.stattrak = -1;
                 s_current_config.custom_name.clear();
                 s_current_config.enabled = true;
                 s_selected_paint_kit = 0;
-                s_selected_wear = 0.0f;
+                s_selected_wear = 0.0001f;
                 s_selected_seed = 0;
                 s_selected_stattrak = 0;
                 s_stattrak_enabled = false;
@@ -171,7 +171,7 @@ void SkinPanel::RenderKnivesTab() {
 }
 
 void SkinPanel::RenderGlovesTab() {
-    auto items = ItemDatabase::Search(s_search_buffer, ItemCategory::Gloves);
+    auto items = ItemDatabase::Search(s_search_buffer, ItemType::Glove);
 
     if (ImGui::BeginTable("GlovesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, 300))) {
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
@@ -185,20 +185,20 @@ void SkinPanel::RenderGlovesTab() {
             ImGui::Text("%s", item.name.c_str());
 
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%d", item.definition_index);
+            ImGui::Text("%d", item.def_index);
 
             ImGui::TableSetColumnIndex(2);
-            if (ImGui::SmallButton(("Edit##" + std::to_string(item.definition_index)).c_str())) {
+            if (ImGui::SmallButton(("Edit##" + std::to_string(item.def_index)).c_str())) {
                 s_selected_item = &item;
-                s_current_config.definition_index = item.definition_index;
+                s_current_config.definition_index = item.def_index;
                 s_current_config.paint_kit_id = 0;
                 s_current_config.seed = 0;
-                s_current_config.wear = 0.0f;
+                s_current_config.wear = 0.0001f;
                 s_current_config.stattrak = -1;
                 s_current_config.custom_name.clear();
                 s_current_config.enabled = true;
                 s_selected_paint_kit = 0;
-                s_selected_wear = 0.0f;
+                s_selected_wear = 0.0001f;
                 s_selected_seed = 0;
                 s_selected_stattrak = 0;
                 s_stattrak_enabled = false;
@@ -222,17 +222,22 @@ void SkinPanel::RenderMusicKitsTab() {
     ImGui::Text("Hook sound event system and write player controller music kit field.");
 }
 
-void SkinPanel::RenderSkinEditor(const DumpedItem& item) {
-    ImGui::Text("Editing: %s (DefIndex: %d)", item.name.c_str(), item.definition_index);
+void SkinPanel::RenderSkinEditor(const DumpedItemDef& item) {
+    ImGui::Text("Editing: %s (DefIndex: %d)", item.name.c_str(), item.def_index);
     ImGui::Separator();
+
+    const auto& paint_kits = ItemDatabase::GetPaintKits();
 
     // Paint Kit dropdown
     ImGui::Text("Paint Kit:");
     ImGui::SetNextItemWidth(-1);
-    if (ImGui::BeginCombo("##paintkit", item.paint_kits.empty() ? "Stock" : item.paint_kits[s_selected_paint_kit % item.paint_kits.size()].name.c_str())) {
-        for (size_t i = 0; i < item.paint_kits.size(); ++i) {
+    const char* current_kit = "Stock";
+    if (!paint_kits.empty() && s_selected_paint_kit < static_cast<int>(paint_kits.size()))
+        current_kit = paint_kits[s_selected_paint_kit].description.c_str();
+    if (ImGui::BeginCombo("##paintkit", current_kit)) {
+        for (size_t i = 0; i < paint_kits.size(); ++i) {
             bool is_selected = (s_selected_paint_kit == static_cast<int>(i));
-            if (ImGui::Selectable(item.paint_kits[i].name.c_str(), is_selected))
+            if (ImGui::Selectable(paint_kits[i].description.c_str(), is_selected))
                 s_selected_paint_kit = static_cast<int>(i);
             if (is_selected) ImGui::SetItemDefaultFocus();
         }
@@ -281,7 +286,7 @@ void SkinPanel::RenderSkinEditor(const DumpedItem& item) {
 
     // Buttons
     if (ImGui::Button("Apply", ImVec2(100, 0))) {
-        s_current_config.paint_kit_id = item.paint_kits.empty() ? 0 : item.paint_kits[s_selected_paint_kit % item.paint_kits.size()].id;
+        s_current_config.paint_kit_id = paint_kits.empty() ? 0 : paint_kits[s_selected_paint_kit].id;
         s_current_config.seed = s_selected_seed;
         s_current_config.wear = s_selected_wear;
         s_current_config.stattrak = s_stattrak_enabled ? s_selected_stattrak : -1;
